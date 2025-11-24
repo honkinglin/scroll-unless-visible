@@ -10,7 +10,7 @@ const DEFAULT_THRESHOLD = 1;
 const DEFAULT_ROOT_MARGIN = "0px";
 const DEFAULT_TIMEOUT = 150;
 
-const hasDOM =
+const hasDOM = () =>
   typeof window !== "undefined" &&
   typeof document !== "undefined" &&
   typeof Element !== "undefined";
@@ -153,7 +153,7 @@ export const isVisible = async (
   target: Element,
   opts: VisibilityOptions = {}
 ): Promise<boolean> => {
-  if (!hasDOM) {
+  if (!hasDOM()) {
     throw new Error("scroll-unless-visible requires a DOM-like environment.");
   }
 
