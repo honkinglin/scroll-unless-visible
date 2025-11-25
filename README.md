@@ -54,3 +54,8 @@ Visibility check without scrolling. Resolves to `true`/`false`.
 - Uses `IntersectionObserver` when available (viewport or provided root).
 - Times out quickly to avoid hanging if the observer never reports.
 - Falls back to a bounding-rect overlap check in older browsers.
+
+## Testing
+
+- Unit tests (Bun): `bun test test/index.test.ts`
+- E2E (Playwright): `npm run build && npm run test:e2e` (run `npx playwright install` once for browsers)
