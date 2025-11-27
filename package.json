@@ -1,18 +1,27 @@
 {
   "name": "scroll-unless-visible",
-  "module": "index.ts",
+  "module": "dist/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir=dist --target=browser",
-    "test": "bun test test/index.test.ts",
-    "test:e2e": "npm run build && playwright test playwright/tests/e2e.spec.ts"
+    "build": "bun build ./src/index.ts --outdir=dist --target=browser && tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "test": "vitest --run --environment jsdom",
+    "test:unit": "vitest --run test/index.test.ts --environment jsdom",
+    "test:e2e": "vitest --run test/e2e.test.ts --environment jsdom"
   },
   "devDependencies": {
-    "@playwright/test": "^1.57.0",
     "@types/bun": "latest",
-    "@types/node": "^20.19.25"
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^24.10.1",
+    "jsdom": "^27.2.0",
+    "vitest": "^4.0.14"
   },
   "peerDependencies": {
-    "typescript": "^5"
-  }
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist"
+  ]
 }

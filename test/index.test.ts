@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach, beforeAll, afterAll } from "bun:test";
+import { describe, expect, it, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
 import scrollIntoViewIfNeeded, {
   isVisible,
   scrollUnlessVisible,
@@ -99,7 +99,7 @@ describe("isVisible (geometry fallback)", () => {
     el._rect = { top: 10, left: 10, right: 60, bottom: 60, width: 50, height: 50 } as DOMRect;
 
     const visible = await isVisible(el as unknown as Element);
-    expect(visible).toBeTrue();
+    expect(visible).toBe(true);
   });
 
   it("returns false when outside the viewport", async () => {
@@ -112,7 +112,7 @@ describe("isVisible (geometry fallback)", () => {
     el._rect = { top: 150, left: 150, right: 200, bottom: 200, width: 50, height: 50 } as DOMRect;
 
     const visible = await isVisible(el as unknown as Element);
-    expect(visible).toBeFalse();
+    expect(visible).toBe(false);
   });
 
   it("respects root and rootMargin", async () => {
@@ -126,7 +126,7 @@ describe("isVisible (geometry fallback)", () => {
     el._rect = { top: 95, left: 95, right: 145, bottom: 145, width: 50, height: 50 } as DOMRect;
 
     const visible = await isVisible(el as unknown as Element, { root: root as unknown as Element, rootMargin: "20px", threshold: 0.2 });
-    expect(visible).toBeTrue();
+    expect(visible).toBe(true);
   });
 });
 
@@ -155,7 +155,7 @@ describe("scrollIntoViewIfNeeded", () => {
     el._rect = { top: 150, left: 150, right: 200, bottom: 200, width: 50, height: 50 } as DOMRect;
 
     const result = await scrollIntoViewIfNeeded(el as unknown as Element);
-    expect(result.scrolled).toBeTrue();
+    expect(result.scrolled).toBe(true);
     expect(el.scrollCalls).toBe(1);
   });
 
@@ -164,7 +164,7 @@ describe("scrollIntoViewIfNeeded", () => {
     el._rect = { top: 10, left: 10, right: 60, bottom: 60, width: 50, height: 50 } as DOMRect;
 
     const result = await scrollIntoViewIfNeeded(el as unknown as Element, { scrollMode: "always" });
-    expect(result.scrolled).toBeTrue();
+    expect(result.scrolled).toBe(true);
     expect(el.scrollCalls).toBe(1);
   });
 
@@ -184,7 +184,7 @@ describe("scrollIntoViewIfNeeded", () => {
     const result = await scrollIntoViewIfNeeded(el as unknown as Element, {
       boundary: (node) => (node as unknown as MockElement).classList.contains("scroll-container"),
     });
-    expect(result.scrolled).toBeTrue();
+    expect(result.scrolled).toBe(true);
     expect(el.scrollCalls).toBe(1);
   });
 });
@@ -200,7 +200,7 @@ describe("scrollUnlessVisible", () => {
     el._rect = { top: 150, left: 150, right: 200, bottom: 200, width: 50, height: 50 } as DOMRect;
 
     const result = await scrollUnlessVisible(el as unknown as Element);
-    expect(result.scrolled).toBeTrue();
+    expect(result.scrolled).toBe(true);
     expect(el.scrollCalls).toBe(1);
   });
 });

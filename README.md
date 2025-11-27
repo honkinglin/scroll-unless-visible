@@ -1,6 +1,12 @@
 # scroll-unless-visible
 
-A modern, IntersectionObserver-first take on the `scroll-into-view-if-needed` API. Scrolls only when an element is not sufficiently visible, with a geometry fallback for legacy environments.
+IntersectionObserver-first drop-in for `scroll-into-view-if-needed`. It scrolls only when an element isn’t sufficiently visible, with a geometry fallback for legacy environments.
+
+## Features
+- Observer-backed visibility (no manual math when supported)
+- `scrollMode: "if-needed" | "always"` to mirror the original API
+- Works with viewport or container roots (`boundary` / `root`), margins, and thresholds
+- Smooth scroll defaults plus a timeout-backed fallback when observers are missing
 
 ## Install
 
@@ -10,52 +16,46 @@ npm install scroll-unless-visible
 bun add scroll-unless-visible
 ```
 
-## API
-
-### `scrollIntoViewIfNeeded(target, options?)`
-Works like `scroll-into-view-if-needed` but prefers `IntersectionObserver` to decide if scrolling is required.
+## Usage
 
 ```ts
 import { scrollIntoViewIfNeeded } from "scroll-unless-visible";
 
 const card = document.querySelector(".card")!;
 
-await scrollIntoViewIfNeeded(card, {
+const result = await scrollIntoViewIfNeeded(card, {
   scrollMode: "if-needed", // or "always"
+  behavior: "smooth",
   block: "nearest",
   inline: "nearest",
-  behavior: "smooth",
-  boundary: (el) => el.classList.contains("scroll-container"), // optional
+  boundary: (el) => el.classList.contains("scroll-container"),
   threshold: 1,
   rootMargin: "8px",
 });
+// result => { visible: boolean; scrolled: boolean }
 ```
 
-Returns `{ visible: boolean; scrolled: boolean }`.
-
-### `scrollUnlessVisible(target, options?)`
-Alias focused on the visibility-first behavior; same return shape as above.
-
-### `isVisible(target, options?)`
-Visibility check without scrolling. Resolves to `true`/`false`.
+Other exports:
+- `scrollUnlessVisible(target, options?)`
+- `isVisible(target, options?)`
 
 ## Options
 
-- `scrollMode`: `"if-needed"` (default) or `"always"`
+- `scrollMode`: `"if-needed"` (default) | `"always"`
 - `block`, `inline`, `behavior`, `scrollIntoViewOptions`: forwarded to `scrollIntoView`
-- `boundary`: element, document, or predicate to pick a root container for visibility checks (defaults to viewport)
+- `boundary`: element, document, or predicate to choose the scroll container; defaults to viewport
 - `root`: explicit root for visibility (overrides `boundary`)
-- `threshold`: required visible ratio (0–1), defaults to `1`
-- `rootMargin`: margin around the root when testing visibility, defaults to `0px`
-- `timeoutMs`: max wait for the first `IntersectionObserver` callback before falling back, defaults to `150`
+- `threshold`: required visible ratio (0–1), default `1`
+- `rootMargin`: margin around the root for visibility checks, default `0px`
+- `timeoutMs`: max wait for the first observer callback before falling back, default `150`
 
-## How it works
+## Behavior notes
 
-- Uses `IntersectionObserver` when available (viewport or provided root).
-- Times out quickly to avoid hanging if the observer never reports.
-- Falls back to a bounding-rect overlap check in older browsers.
+- Prefers `IntersectionObserver` with the provided root; falls back to geometry when unavailable or timed out.
+- Uses smooth scrolling and `"nearest"` positioning by default to minimize layout jumps.
 
 ## Testing
 
-- Unit tests (Bun): `bun test test/index.test.ts`
-- E2E (Playwright): `npm run build && npm run test:e2e` (run `npx playwright install` once for browsers)
+- Unit: `npm run test:unit` (Vitest, jsdom)
+- E2E-style: `npm run test:e2e` (Vitest, jsdom)
+- Full suite: `npm test`
