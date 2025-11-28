@@ -6,8 +6,9 @@
     "noEmit": false,
     "outDir": "dist",
     "module": "ESNext",
-    "moduleResolution": "node",
-    "allowImportingTsExtensions": false
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false,
+    "verbatimModuleSyntax": false
   },
   "include": ["src"]
 }
