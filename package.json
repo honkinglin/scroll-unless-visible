@@ -9,7 +9,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir=dist --target=browser && tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
     "test": "vitest --run --environment jsdom",
     "test:unit": "vitest --run test/index.test.ts --environment jsdom",
