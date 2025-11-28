@@ -1,5 +1,9 @@
 {
   "name": "scroll-unless-visible",
+  "version": "1.0.0",
+  "description": "A tiny TypeScript library to scroll an element into view unless it's already visible in the viewport.",
+  "keywords": ["scroll", "viewport", "visible", "typescript", "library", "web", "browser"],
+  "author": "Kyrie Lin",
   "module": "dist/index.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

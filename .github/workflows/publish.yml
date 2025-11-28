@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write # Required for provenance
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,6 +20,7 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
+          cache: 'npm'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -32,8 +34,30 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check version match
+        if: github.event_name == 'release'
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo "Version mismatch: package.json has $PACKAGE_VERSION but tag is $TAG_VERSION"
+            exit 1
+          fi
+
       - name: Publish to npm
-        if: success()
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Comment on success
+        if: success() && github.event_name == 'release'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = require('./package.json').version;
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `✅ Successfully published version ${version} to npm!`
+            })
