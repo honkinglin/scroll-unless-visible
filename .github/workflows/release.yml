@@ -2,83 +2,49 @@ name: Release
 
 on:
   push:
-    branches: [main]
-    paths:
-      - 'package.json'
+    tags:
+      - "v*"
 
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Check if version changed
-        id: version_check
+      - name: Extract version from tag
+        id: version
         run: |
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          
-          # Check if this tag already exists
-          if git rev-parse "v${CURRENT_VERSION}" >/dev/null 2>&1; then
-            echo "Tag v${CURRENT_VERSION} already exists"
-            echo "changed=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          # Try to get previous version, but don't fail if there's no previous commit
-          PREVIOUS_VERSION=$(git show HEAD~1:package.json 2>/dev/null | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version" 2>/dev/null || echo "")
-          
-          if [ -z "$PREVIOUS_VERSION" ] || [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
-            echo "Version changed from ${PREVIOUS_VERSION:-none} to $CURRENT_VERSION"
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "Version unchanged: $CURRENT_VERSION"
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG_NAME#v}
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        if: steps.version_check.outputs.changed == 'true'
         uses: actions/github-script@v7
         with:
           script: |
-            const version = '${{ steps.version_check.outputs.version }}';
-            const tag = `v${version}`;
+            const tag = '${{ steps.version.outputs.tag }}';
+            const version = '${{ steps.version.outputs.version }}';
             
-            // Create tag
-            try {
-              await github.rest.git.createRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `refs/tags/${tag}`,
-                sha: context.sha
-              });
-              console.log(`Created tag ${tag}`);
-            } catch (error) {
-              if (error.status === 422) {
-                console.log(`Tag ${tag} already exists`);
-              } else {
-                throw error;
-              }
-            }
-            
-            // Create release
             try {
               await github.rest.repos.createRelease({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 tag_name: tag,
-                name: `v${version}`,
+                name: `Release ${tag}`,
                 body: `Release version ${version}`,
                 draft: false,
                 prerelease: false
               });
               console.log(`Created release ${tag}`);
             } catch (error) {
-              console.error('Failed to create release:', error);
+              if (error.status === 422) {
+                console.log(`Release ${tag} already exists`);
+              } else {
+                console.error('Failed to create release:', error);
+                throw error;
+              }
             }
