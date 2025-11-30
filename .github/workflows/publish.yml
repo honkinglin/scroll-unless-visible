@@ -3,6 +3,9 @@ name: Publish
 on:
   release:
     types: [published]
+  push:
+    tags:
+      - "v*" # publish when a version tag is pushed
   workflow_dispatch:
 
 jobs:
@@ -11,6 +14,9 @@ jobs:
     permissions:
       contents: read
       id-token: write # Required for provenance
+    concurrency:
+      group: publish-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,16 +38,23 @@ jobs:
         run: npm run build
 
       - name: Check version match
-        if: github.event_name == 'release'
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG_VERSION=${{ github.event.release.tag_name }}
+            TAG_VERSION=${TAG_VERSION#v}
+          else
+            TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "package.json version: $PACKAGE_VERSION"
+          echo "tag version: $TAG_VERSION"
           if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
             echo "Version mismatch: package.json has $PACKAGE_VERSION but tag is $TAG_VERSION"
             exit 1
           fi
 
       - name: Publish to npm
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release'
         run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
